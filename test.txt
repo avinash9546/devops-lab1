@@ -1,1 +1,244 @@
 hello          https://tinyurl.com/csbsisis
+https://tinyurl.com/iscb3
+#4
+import hashlib
+
+def sha256_hash(message):
+    # Create a new SHA-256 hash object
+    sha256 = hashlib.sha256()
+    
+    # Update the hash object with the bytes of the message
+    sha256.update(message.encode('utf-8'))
+    
+    # Get the hexadecimal digest of the hash
+    return sha256.hexdigest()
+
+def main():
+    message = input("Enter message: ")
+    hash_value = sha256_hash(message)
+    print("SHA-256 Hash:", hash_value)
+
+if name == "main":
+    main()
+
+#2
+IP = [
+    58, 50, 42, 34, 26, 18, 10, 2, 60, 52, 44, 36,
+    28, 20, 12, 4, 62, 54, 46, 38, 30, 22, 14, 6,
+    64, 56, 48, 40, 32, 24, 16, 8, 57, 49, 41, 33,
+    25, 17, 9, 1, 59, 51, 43, 35, 27, 19, 11, 3,
+    61, 53, 45, 37, 29, 21, 13, 5, 63, 55, 47, 39,
+    31, 23, 15, 7
+]
+
+def str_to_u64(s): return int.from_bytes(s.encode().ljust(8, b'\0'), 'big')
+def permute(block): return sum(((block >> (64 - b)) & 1) << (63 - i) for i, b in enumerate(IP))
+def keys(k): return [(k ^ (i + 1)) & 0xFFFFFFFFFFFFFFFF for i in range(16)]
+def round_f(b, k): l, r = (b >> 32) & 0xFFFFFFFF, b & 0xFFFFFFFF; return (r << 32) | (l ^ (r ^ k))
+
+def encrypt(b, k):
+    b = permute(b)
+    for rk in keys(k): b = round_f(b, rk)
+    return b
+
+p = input("Enter 8-char plaintext: ")[:8]
+k = input("Enter 8-char key: ")[:8]
+b, k = str_to_u64(p), str_to_u64(k) & 0xFFFFFFFFFFFFFF00
+print(f"\nOriginal : 0x{b:016X}")
+print(f"Encrypted: 0x{encrypt(b,k):016X}")
+
+
+
+#include <stdio.h>
+ #include <math.h>
+ // Function to perform modular exponentiation
+ // It returns (base^exp) % mod
+ long long power(long long base, long long exp, long long mod) {
+ long long result = 1;
+
+base = base % mod;
+    while (exp > 0) {
+        if (exp % 2 == 1) {  // If exp is odd
+            result = (result * base) % mod;
+        }
+        exp = exp >> 1;  // exp = exp // 2
+        base = (base * base) % mod;
+    }
+    return result;
+ }
+ int main() {
+    long long p, g, a, b, A, B, shared_secret_Alice, shared_secret_Bob;
+    // Step 1: Public parameters (p and g)
+    printf("Enter a prime number p: ");
+    scanf("%lld", &p);
+    printf("Enter a primitive root g: ");
+    scanf("%lld", &g);
+    // Step 2: Private keys (a and b)
+    printf("Enter Alice's private key a: ");
+    scanf("%lld", &a);
+    printf("Enter Bob's private key b: ");
+    scanf("%lld", &b);
+    // Step 3: Calculate public keys (A and B)
+    A = power(g, a, p); // A = g^a % p
+    B = power(g, b, p); // B = g^b % p
+    printf("Alice's public key: %lld\n", A);
+    printf("Bob's public key: %lld\n", B);
+    // Step 4: Exchange public keys
+    // Step 5: Calculate shared secret (using the other's public key)
+    shared_secret_Alice = power(B, a, p); // shared secret = B^a % p
+    shared_secret_Bob = power(A, b, p);   // shared secret = A^b % p
+    printf("Shared secret calculated by Alice: %lld\n", shared_secret_Alice);
+    printf("Shared secret calculated by Bob: %lld\n", shared_secret_Bob);
+    if (shared_secret_Alice == shared_secret_Bob) {
+        printf("Key exchange successful! Shared secret is: %lld\n", shared_secret_Alice);
+    } else {
+        printf("Key exchange failed.\n");
+    } 
+return 0;
+ }
+
+
+#3
+def mod_exp(base, exp, mod): 
+res = 1 
+base %= mod 
+while exp: 
+if exp & 1: 
+res = (res * base) % mod 
+base = (base * base) % mod 
+exp >>= 1 
+return res 
+p = int(input("Prime p: ")) 
+g = int(input("Primitive root g: ")) 
+a = int(input("Alice private key a: ")) 
+b = int(input("Bob private key b: ")) 
+A = mod_exp(g, a, p) 
+B = mod_exp(g, b, p) 
+print(f"Alice's public key: {A}") 
+print(f"Bob's public key: {B}") 
+s_a = mod_exp(B, a, p) 
+s_b = mod_exp(A, b, p) 
+print(f"Alice's shared secret: {s_a}") 
+print(f"Bob's shared secret: {s_b}") 
+print("\nSuccess!" if s_a == s_b else "\nFailure.")
+
+#1
+def caesar(text, shift):
+    return ''.join(
+        chr((ord(c) - base + shift) % 26 + base) if c.isalpha() else c
+        for c in text
+        for base in [ord('A') if c.isupper() else ord('a')]
+    )
+
+text = input("Text: ")
+shift = int(input("Shift: "))
+enc = caesar(text, shift)
+dec = caesar(enc, -shift)
+
+print("Encrypted:", enc)
+print("Decrypted:", dec)
+
+#1.2# Playfair Cipher
+def create_matrix(key):
+    key = key.lower().replace('j','i')
+    s = "".join(dict.fromkeys([c for c in key if c.isalpha()]))
+    alphabet = "abcdefghiklmnopqrstuvwxyz"
+    matrix = (s + "".join([c for c in alphabet if c not in s]))
+    return [list(matrix[i*5:(i+1)*5]) for i in range(5)]
+
+def find_pos(matrix, c):
+    for i in range(5):
+        for j in range(5):
+            if matrix[i][j] == c:
+                return i,j
+
+def prepare(text):
+    text = text.lower().replace('j','i')
+    text = "".join([c for c in text if c.isalpha()])
+    i, res = 0, ""
+    while i < len(text):
+        a = text[i]
+        b = text[i+1] if i+1 < len(text) and text[i+1] != a else 'x'
+        res += a + b
+        i += 2 if b != 'x' else 1
+    if len(res) % 2: res += 'x'
+    return res
+
+def playfair(text, matrix, enc=True):
+    text = prepare(text) if enc else text
+    res = ""
+    step = 1 if enc else -1
+    for i in range(0, len(text), 2):
+        r1,c1 = find_pos(matrix, text[i])
+        r2,c2 = find_pos(matrix, text[i+1])
+        if r1 == r2:
+            res += matrix[r1][(c1+step)%5] + matrix[r2][(c2+step)%5]
+        elif c1 == c2:
+            res += matrix[(r1+step)%5][c1] + matrix[(r2+step)%5][c2]
+        else:
+            res += matrix[r1][c2] + matrix[r2][c1]
+    return res
+
+key = input("Key: ")
+text = input("Text: ")
+m = create_matrix(key)
+print("Matrix:")
+for row in m: print(" ".join(row))
+enc = playfair(text, m)
+dec = playfair(enc, m, False)
+print("Encrypted:", enc)
+print("Decrypted:", dec)
+
+class DAC:
+    acl = {
+        "alice": {"file1.txt": "rw"},
+        "bob": {"file1.txt": "r"},
+        "charlie": {"file2.txt": "rw"}
+    }
+
+    def has_perm(self, u, f, op):
+        return u in self.acl and f in self.acl[u] and op in self.acl[u][f]
+
+    def access(self, u, f, op):
+        if not self.has_perm(u, f, op):
+            print("❌ Access Denied")
+            return
+        try:
+            if op == 'r':
+                print(open(f).read())
+            elif op == 'w':
+                with open(f, 'a') as file:
+                    file.write(f"\nUpdated by {u}")
+                print("✅ Write successful")
+        except FileNotFoundError:
+            print("❌ File not found.")
+
+dac = DAC()
+u = input("User: ")
+f = input("File: ")
+op = input("Operation (r/w): ")
+dac.access(u, f, op)
+
+
+# MAC
+class MAC:
+    clearance = {"alice": 3, "bob": 2, "eve": 1}
+    labels = {"top_secret.txt": 3, "confidential.txt": 2, "public.txt": 1}
+
+    def access(self, u, f):
+        c = self.clearance.get(u)
+        l = self.labels.get(f)
+        if c is None or l is None:
+            print("❌ Invalid user or file.")
+        elif c >= l:
+            try:
+                print("✅ Access granted:\n", open(f).read())
+            except FileNotFoundError:
+                print("❌ File not found.")
+        else:
+            print("❌ Access denied. Clearance too low.")
+
+mac = MAC()
+user = input("User: ")
+file = input("File: ")
+mac.access(user, file)
